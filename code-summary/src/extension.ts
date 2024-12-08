@@ -1,25 +1,89 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  context.subscriptions.push(
+    vscode.commands.registerCommand('extension.openCodeSummary', () => {
+      CodeSummaryPanel.createOrShow(context.extensionUri);
+    })
+  );
+}
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "code-summary" is now active!');
+class CodeSummaryPanel {
+  public static currentPanel: CodeSummaryPanel | undefined;
+  private readonly _panel: vscode.WebviewPanel;
+  private readonly _extensionUri: vscode.Uri;
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('code-summary.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Code Summary!');
-	});
+  public static createOrShow(extensionUri: vscode.Uri) {
+    const column = vscode.window.activeTextEditor ? vscode.ViewColumn.Beside : undefined;
 
-	context.subscriptions.push(disposable);
+    if (CodeSummaryPanel.currentPanel) {
+      CodeSummaryPanel.currentPanel._panel.reveal(column);
+      return;
+    }
+
+    const panel = vscode.window.createWebviewPanel(
+      'codeSummary',
+      'Code Summary',
+      column || vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media')]
+      }
+    );
+
+    CodeSummaryPanel.currentPanel = new CodeSummaryPanel(panel, extensionUri);
+  }
+
+  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+    this._panel = panel;
+    this._extensionUri = extensionUri;
+
+    this._update();
+
+    this._panel.onDidDispose(() => this.dispose(), null, []);
+
+    this._panel.onDidChangeViewState(
+      () => {
+        if (this._panel.visible) {
+          this._update();
+        }
+      },
+      null,
+      []
+    );
+  }
+
+  public dispose() {
+    CodeSummaryPanel.currentPanel = undefined;
+    this._panel.dispose();
+  }
+
+  private _update() {
+    const webview = this._panel.webview;
+    this._panel.title = 'Code Summary';
+    this._panel.webview.html = this._getHtmlForWebview(webview);
+  }
+
+  private _getHtmlForWebview(webview: vscode.Webview) {
+    const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'style.css'));
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="${styleUri}" rel="stylesheet">
+  <title>Code Summary</title>
+</head>
+<body>
+  <h1>Code Summary</h1>
+  <div id="content"></div>
+  <script>
+    const vscode = acquireVsCodeApi();
+    // Add your JavaScript code here to render the summary
+  </script>
+</body>
+</html>`;
+  }
 }
 
 // This method is called when your extension is deactivated
