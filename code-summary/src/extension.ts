@@ -21,8 +21,20 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.window.onDidChangeActiveTextEditor(editor => {
     if (editor) {
       statusBarItem.show();
+      if (CodeSummaryPanel.currentPanel) {
+        CodeSummaryPanel.currentPanel.update(editor.document.getText());
+      }
     } else {
       statusBarItem.hide();
+    }
+  });
+
+  // Update the Code Summary when the text document changes
+  vscode.workspace.onDidChangeTextDocument(event => {
+    if (vscode.window.activeTextEditor && event.document === vscode.window.activeTextEditor.document) {
+      if (CodeSummaryPanel.currentPanel) {
+        CodeSummaryPanel.currentPanel.update(event.document.getText());
+      }
     }
   });
 
@@ -82,10 +94,18 @@ class CodeSummaryPanel {
     this._panel.dispose();
   }
 
+  public update(content: string) {
+    this._panel.webview.postMessage({ type: 'update', content });
+  }
+
   private _update() {
     const webview = this._panel.webview;
     this._panel.title = 'Code Summary';
     this._panel.webview.html = this._getHtmlForWebview(webview);
+
+    if (vscode.window.activeTextEditor) {
+      this.update(vscode.window.activeTextEditor.document.getText());
+    }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
@@ -103,7 +123,14 @@ class CodeSummaryPanel {
   <div id="content"></div>
   <script>
     const vscode = acquireVsCodeApi();
-    // Add your JavaScript code here to render the summary
+    window.addEventListener('message', event => {
+      const message = event.data;
+      switch (message.type) {
+        case 'update':
+          document.getElementById('content').innerText = message.content;
+          break;
+      }
+    });
   </script>
 </body>
 </html>`;
