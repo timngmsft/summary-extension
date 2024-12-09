@@ -37,9 +37,30 @@ exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 function activate(context) {
+    // Create a status bar item
+    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.command = 'extension.openCodeSummary';
+    statusBarItem.text = '$(preview) Open Code Summary';
+    statusBarItem.tooltip = 'Open Code Summary';
+    statusBarItem.show();
+    context.subscriptions.push(statusBarItem);
+    // Register the command to open the Code Summary
     context.subscriptions.push(vscode.commands.registerCommand('extension.openCodeSummary', () => {
         CodeSummaryPanel.createOrShow(context.extensionUri);
     }));
+    // Show the status bar item when any file is opened
+    vscode.window.onDidChangeActiveTextEditor(editor => {
+        if (editor) {
+            statusBarItem.show();
+        }
+        else {
+            statusBarItem.hide();
+        }
+    });
+    // Ensure the status bar item is visible initially
+    if (vscode.window.activeTextEditor) {
+        statusBarItem.show();
+    }
 }
 class CodeSummaryPanel {
     static currentPanel;
