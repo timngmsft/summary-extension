@@ -44,9 +44,18 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   // Access the Open AI Developer Key setting
-  const config = vscode.workspace.getConfiguration('codeSummary');
-  const openAIDevKey = config.get<string>('openAIDevKey');
+  let config = vscode.workspace.getConfiguration('codeSummary');
+  let openAIDevKey = config.get<string>('openAIDevKey');
   console.log('Open AI Developer Key:', openAIDevKey);
+
+  // Listen for configuration changes
+  vscode.workspace.onDidChangeConfiguration(event => {
+    if (event.affectsConfiguration('codeSummary.openAIDevKey')) {
+      config = vscode.workspace.getConfiguration('codeSummary');
+      openAIDevKey = config.get<string>('openAIDevKey');
+      console.log('Updated OpenAI Developer Key:', openAIDevKey);
+    }
+  });
 }
 
 class CodeSummaryPanel {
