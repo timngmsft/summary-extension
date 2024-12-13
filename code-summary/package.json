@@ -26,7 +26,18 @@
         "key": "ctrl+shift+s",
         "when": "editorTextFocus"
       }
-    ]
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Code Summary",
+      "properties": {
+        "codeSummary.openAIDevKey": {
+          "type": "string",
+          "default": "",
+          "description": "Open AI Developer Key"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

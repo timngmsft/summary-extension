@@ -72,6 +72,10 @@ function activate(context) {
     if (vscode.window.activeTextEditor) {
         statusBarItem.show();
     }
+    // Access the Open AI Developer Key setting
+    const config = vscode.workspace.getConfiguration('codeSummary');
+    const openAIDevKey = config.get('openAIDevKey');
+    console.log('Open AI Developer Key:', openAIDevKey);
 }
 class CodeSummaryPanel {
     static currentPanel;
