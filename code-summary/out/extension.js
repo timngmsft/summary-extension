@@ -25,7 +25,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(require("vscode"));
+const path = __importStar(require("path"));
+const fs = __importStar(require("fs"));
+const openai_1 = require("openai");
+let config;
+function loadConfig() {
+    const configPath = path.join(__dirname, '..', 'config.json');
+    const configFile = fs.readFileSync(configPath, 'utf-8');
+    config = JSON.parse(configFile);
+}
 function activate(context) {
+    loadConfig();
     // Create a status bar item
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.command = 'extension.openCodeSummary';
@@ -35,7 +45,18 @@ function activate(context) {
     context.subscriptions.push(statusBarItem);
     // Register the command to open the Code Summary
     context.subscriptions.push(vscode.commands.registerCommand('extension.openCodeSummary', () => {
-        CodeSummaryPanel.createOrShow(context.extensionUri);
+        const panel = vscode.window.createWebviewPanel('codeSummary', 'Code Summary', vscode.ViewColumn.One, {
+            enableScripts: true
+        });
+        panel.webview.html = getWebviewContent();
+        panel.webview.onDidReceiveMessage(async (message) => {
+            switch (message.command) {
+                case 'fetchSummary':
+                    const summary = await fetchSummaryFromAzureOpenAI(message.text);
+                    panel.webview.postMessage({ command: 'update', content: summary });
+                    return;
+            }
+        }, undefined, context.subscriptions);
     }));
     // Show the status bar item when any file is opened
     vscode.window.onDidChangeActiveTextEditor(editor => {
@@ -75,6 +96,61 @@ function activate(context) {
     });
 }
 exports.activate = activate;
+async function fetchSummaryFromAzureOpenAI(messages) {
+    const apiKey = vscode.workspace.getConfiguration('codeSummary').get('openAIDevKey') ?? "";
+    const endpoint = config.azureOpenAIEndpoint;
+    const apiVersion = '2024-10-21';
+    console.log('API Key:', apiKey);
+    console.log('Endpoint:', endpoint);
+    try {
+        const options = { endpoint, apiKey, apiVersion };
+        const client = new openai_1.AzureOpenAI(options);
+        const result = await client.chat.completions.create({
+            messages: [
+                { role: "user", content: messages }
+            ],
+            model: '',
+            max_tokens: 100
+        });
+        return result.choices[0].message.content ?? 'No summary available';
+    }
+    catch (error) {
+        console.error('Error fetching summary:', error);
+        return 'Error fetching summary';
+    }
+}
+function getWebviewContent() {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Summary</title>
+</head>
+<body>
+  <h1>Code Summary</h1>
+  <div id="content"></div>
+  <script>
+    const vscode = acquireVsCodeApi();
+    window.addEventListener('message', event => {
+      const message = event.data;
+      switch (message.command) {
+        case 'update':
+          document.getElementById('content').innerText = message.content;
+          break;
+      }
+    });
+
+    function fetchSummary() {
+      const text = 'Your text to summarize';
+      vscode.postMessage({ command: 'fetchSummary', text: text });
+    }
+
+    fetchSummary();
+  </script>
+</body>
+</html>`;
+}
 class CodeSummaryPanel {
     static currentPanel;
     _panel;

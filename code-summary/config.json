@@ -1,0 +1,4 @@
+{
+    "azureOpenAIEndpoint": "https://bandish-test-123.openai.azure.com/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-08-01-preview",
+    "apiVersion": "2024-10-21"
+}
