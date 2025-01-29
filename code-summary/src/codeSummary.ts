@@ -22,7 +22,7 @@ export default class CodeSummary {
     }
 
     private buildPrompt(document: string) {
-        let basePrompt = "Summarize the following code snippet:\n";
+        let basePrompt = "Summarize the following code snippet. Do not return markdown; instead, return HTML that I can paste into a web page.\n";
         return basePrompt + document;
     }
 
@@ -41,7 +41,7 @@ export default class CodeSummary {
             messages: [
                 { role: "user", content: prompt } ],
             model: '',
-            max_tokens: 100
+            max_tokens: 1000
             });
 
             return result.choices[0].message.content ?? 'No summary available';
