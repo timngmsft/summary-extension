@@ -7,11 +7,6 @@ export default class CodeSummary {
     private panel!: vscode.WebviewPanel;
     private context: vscode.ExtensionContext;
     private configFile: any;
-    private readonly disposables: vscode.Disposable[] = [];
-    private _disposed: boolean = false;
-    private readonly _onDisposeEmitter = new vscode.EventEmitter<void>();
-    public readonly onDispose = this._onDisposeEmitter.event;
-    private readonly _onDidChangeViewStateEmitter = new vscode.EventEmitter<vscode.WebviewPanelOnDidChangeViewStateEvent>();
 
     //returns true if an html document is open
     constructor(context: vscode.ExtensionContext, configFile: any) {
@@ -63,7 +58,6 @@ export default class CodeSummary {
             const fileName = filePaths[filePaths.length - 1]
             this.panel.title = `Code summary for ${fileName}`;
             let codeSummary = await this.summarizeDocument(sourceCode);
-            console.log('Code summary:', codeSummary);
             this.panel.webview.html = this.getWebviewContent(this.panel.webview, codeSummary, fileName);
         }
     }
@@ -110,11 +104,8 @@ export default class CodeSummary {
                     // Enable scripts in the webview
                     enableScripts: true,
                     retainContextWhenHidden: true,
-                    // And restrict the webview to only loading content from our extension's `assets` directory.
-                    localResourceRoots: [vscode.Uri.file(path.join(this.context.extensionPath, 'assets')), vscode.Uri.file(path.join(vscode.workspace.rootPath!, 'content/media'))]
                 }
             );
-            this._disposed = false;
 
             await this.handleTextDocumentChange.call(this);
 
@@ -123,28 +114,11 @@ export default class CodeSummary {
             vscode.workspace.onDidSaveTextDocument(await this.handleTextDocumentChange.bind(this));
             vscode.window.onDidChangeActiveTextEditor(await this.handleTextDocumentChange.bind(this));
 
-            this.panel.onDidDispose(() => {
-                this.dispose();
-            }, null, this.disposables);
+            this.panel.onDidDispose(() => this.dispose(), null, []);
         }
     }
 
     public dispose() {
-        if (this._disposed) {
-            return;
-        }
-
-        this._disposed = true;
-        this._onDisposeEmitter.fire();
-
-        this._onDisposeEmitter.dispose();
         this.panel.dispose();
-
-        while (this.disposables.length) {
-            const item = this.disposables.pop();
-            if (item) {
-                item.dispose();
-            }
-        }
     }
 }
