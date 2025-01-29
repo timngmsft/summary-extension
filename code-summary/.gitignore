@@ -113,3 +113,8 @@ dist
 # Temporary folders
 tmp/
 temp/
+
+# .gitignore
+out/
+*.js
+*.js.map
