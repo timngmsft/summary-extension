@@ -38,10 +38,10 @@ export default class CodeSummary {
             const options = { endpoint, apiKey, apiVersion }
             const client = new AzureOpenAI(options);
             const result = await client.chat.completions.create({
-            messages: [
-                { role: "user", content: prompt } ],
-            model: '',
-            max_tokens: 1000
+                messages: [
+                    { role: "user", content: prompt } ],
+                model: '',
+                max_tokens: 1000
             });
 
             return result.choices[0].message.content ?? 'No summary available';
@@ -83,11 +83,14 @@ export default class CodeSummary {
     }
 
     private showAISummaryForDocumentType(): boolean {
-        let result = this.getDocumentType() === "markdown";
+        const sourceCodeLanguages = [
+            "javascript", "typescript", "python", "java", "csharp", "cpp", "c", "ruby", "go", "php", "swift", "kotlin", "rust", "scala", "perl", "haskell", "lua", "r", "dart", "elixir", "erlang", "fsharp", "groovy", "objective-c", "shellscript", "powershell"
+        ];
+        let result = sourceCodeLanguages.includes(this.getDocumentType());
         if (!result) {
-            vscode.window.showInformationMessage("No file");
+            vscode.window.showInformationMessage("The file type is not supported for summarization.");
         }
-        return true;
+        return result;
     }
 
     async initCodeSummaryPreview() {
