@@ -55,10 +55,16 @@ export default class CodeSummary {
         if (this.readyToShowAI()) {
             let sourceCode = vscode.window.activeTextEditor!.document.getText();
             const filePaths = vscode.window.activeTextEditor!.document.fileName.split('/');
-            const fileName = filePaths[filePaths.length - 1]
+            const fileName = filePaths[filePaths.length - 1];
             this.panel.title = `Code summary for ${fileName}`;
+            // Set initial loading message
+            this.panel.webview.html = this.getWebviewContent(this.panel.webview, "<p>Loading...</p>", fileName);
+            // Fetch the summary asynchronously
             let codeSummary = await this.summarizeDocument(sourceCode);
-            this.panel.webview.html = this.getWebviewContent(this.panel.webview, codeSummary, fileName);
+            // Check if the panel is still active before updating the content
+            if (this.panel && this.panel.webview) {
+                this.panel.webview.html = this.getWebviewContent(this.panel.webview, codeSummary, fileName);
+            }
         }
     }
 
@@ -122,6 +128,7 @@ export default class CodeSummary {
     }
 
     public dispose() {
+        console.log("Dispsing of Code Summary panel");
         this.panel.dispose();
     }
 }
