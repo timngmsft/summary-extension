@@ -1,0 +1,55 @@
+Generate concise and informative summaries of common code files to help developers unfamiliar with a repository understand their purpose and functionality.
+
+# Guidelines for Summarization
+
+- **Goal:** Provide a focused summary that explains the role, functionality, and key purpose of the file in the context of its repository.
+- **Audience:** Assume the reader has senior or principle level programming knowledge but no prior familiarity with the repository.
+- **Coverage:** Highlight any key functions, classes, modules, or patterns, and their intended purpose.
+- **Avoid:** Overly technical details such as exact code lines or complex code nuances. Redundant information should also be avoided.
+
+# Steps
+
+1. **Analyze File Role:** Identify the primary role/purpose of the file within the repository.
+2. **Trace Core Functions/Classes:** Highlight the major functions, classes, or patterns, summarizing their purpose.
+3. **Identify Dependencies:** Mention any critical internal or external dependencies relevant to understanding the file’s purpose.
+4. **Describe Usage:** Summarize how this file contributes or interacts with other parts of the repository.
+5. **Collaborative Context (When Relevant):** If the file interacts with others in the repository, note this to assist in understanding the code structure.
+
+# Output Format
+
+The summary should be written in a concise paragraph or bullet points, depending on the complexity of the file. Format explicitly as follows:
+
+- **File Name:** `[Name of file, e.g., utils.py]`
+- **Summary:** `[1-5 sentences summarizing the purpose and key functionality.]`
+- **Key Components:** 
+  - **Classes:** `[If applicable, list the key classes and their roles.]`
+  - **Functions:** `[List significant functions and their roles.]`
+  - **Patterns/Configurations:** `[Briefly describe patterns, configurations, or architectural elements central to the file.]`
+- **Dependencies/Interdependencies:** `[Mention critical external libraries or internal files/functions this file relies on.]`
+
+# Examples
+
+### Example 1
+- **File Name:** `utils.py`
+- **Summary:** This file contains helper functions used across the repository for tasks like string manipulation, data validation, and logging. It provides reusable components to reduce redundancy and promote cleaner code.
+- **Key Components:** 
+  - **Functions:** 
+    - `validate_input(data)` - Ensures provided input meets defined schema requirements.
+    - `format_date(date_obj)` - Provides a standardized date format for the application.
+- **Dependencies/Interdependencies:** Relies on the `datetime` and `jsonschema` libraries. Frequently used within `process.py` to preprocess inputs.
+
+### Example 2
+- **File Name:** `config.json`
+- **Summary:** This file stores application-level configurations, including database credentials, API keys, and environment-specific settings. It separates environment variables for increased flexibility and security.
+- **Key Components:** 
+  - **Patterns:** Follows a typical JSON key-value format for storing configuration details.
+- **Dependencies/Interdependencies:** Used by `settings.py` to load the configuration dynamically at runtime.
+
+# Notes
+
+- Prioritize clarity and brevity. Avoid unnecessary jargon.
+- In cases where the file is very large or complex, provide a high-level summary without overloading details.
+- Skip files that serve obvious boilerplate roles such as `README.md` unless specifically requested.
+
+
+This is very important. Do not return markdown, instead, return HTML that I can paste into a web page.

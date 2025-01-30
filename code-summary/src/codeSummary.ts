@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { AzureOpenAI } from 'openai';
 
 export default class CodeSummary {
@@ -21,9 +20,10 @@ export default class CodeSummary {
             && this.panel !== undefined;
     }
 
-    private buildPrompt(document: string) {
-        let basePrompt = "Summarize the following code snippet. Do not return markdown; instead, return HTML that I can paste into a web page.\n";
-        return basePrompt + document;
+    private async getSystemPrompt() {
+        const basePromptUri = vscode.Uri.joinPath(this.context.extensionUri, 'src', 'basePrompt.txt');
+        const basePrompt = await vscode.workspace.fs.readFile(basePromptUri);
+        return basePrompt.toString();
     }
 
     private async summarizeDocument(document: string) {
@@ -31,7 +31,6 @@ export default class CodeSummary {
         let apiKey = config.get<string>('openAIDevKey');
         let endpoint = this.configFile.azureOpenAIEndpoint;
         let apiVersion = '2024-10-21';
-        let prompt = this.buildPrompt(document);
         console.log('Open AI Developer Key:', apiKey);
         console.log('Endpoint:', endpoint);
         try {
@@ -39,7 +38,8 @@ export default class CodeSummary {
             const client = new AzureOpenAI(options);
             const result = await client.chat.completions.create({
                 messages: [
-                    { role: "user", content: prompt } ],
+                    { role: "system", content: await this.getSystemPrompt() },
+                    { role: "user", content: document } ],
                 model: '',
                 max_tokens: 1000
             });
